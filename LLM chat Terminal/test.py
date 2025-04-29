@@ -1,7 +1,7 @@
 import requests
 
 # The API URL of your running model
-MODEL_API_URL = 'http://192.168.27.106:1234/v1/completions'
+MODEL_API_URL = 'http://193:1234/v1/completions' #Your Model Url
 
 def get_user_input():
     """Get prompt from user via terminal input"""
