@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT-like Model</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f1f3f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .chat-container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Title style */
+        .chat-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 10px;
+            background-color: #fff; /* Add background to the title */
+            z-index: 1; /* Ensure it's above other elements */
+        }
+
+        .chat-box {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-message {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 10px;
+            max-width: 70%;
+            font-size: 16px;
+        }
+
+        .chat-message.user {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+            border-radius: 12px 12px 0 12px;
+            position: relative;
+        }
+
+        .chat-message.bot {
+            background-color: #e5e5e5;
+            color: #333;
+            align-self: flex-start;
+            border-radius: 12px 12px 12px 0;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #007bff;
+        }
+
+        button {
+            padding: 15px 25px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message-bubble {
+            opacity: 0;
+            animation: bubbleIn 0.5s forwards;
+        }
+
+        @keyframes bubbleIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <!-- Title added here -->
+        <div class="chat-title">AI Chat Assistant</div>
+
+        <div class="chat-box" id="chat-box">
+            <!-- Chat messages will appear here -->
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Type your message..." />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to display messages in the chat box
+        function displayMessage(text, sender, isLoading=false) {
+            const chatBox = document.getElementById('chat-box');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('chat-message', sender, 'message-bubble');
+            messageDiv.textContent = text;
+            chatBox.appendChild(messageDiv);
+            
+            // Scroll to the bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // If it's a loading message, update after a moment
+            if (isLoading) {
+                setTimeout(() => {
+                    messageDiv.textContent = text;
+                }, 1000);
+            }
+        }
+
+        // Function to handle the message sending
+        function sendMessage() {
+            const userInput = document.getElementById('user-input').value;
+
+            if (userInput.trim() === '') return;  // Don't send empty messages
+
+            // Display user's message
+            displayMessage(userInput, 'user');
+
+            // Clear the input field
+            document.getElementById('user-input').value = '';
+
+            // Display a "loading" spinner in place of the bot's message
+            displayMessage("Loading...", 'bot', true);
+
+            // Send the message to the backend for processing
+            fetch('/get_response', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'user_input=' + encodeURIComponent(userInput)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display the bot's response
+                const botResponse = data.response;
+                const chatBox = document.getElementById('chat-box');
+                const botMessageDiv = chatBox.lastElementChild;
+                botMessageDiv.textContent = botResponse;  // Replace loading with the actual response
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayMessage("Sorry, there was an error. Please try again.", 'bot');
+            });
+        }
+
+        // Allow pressing Enter to send the message
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
