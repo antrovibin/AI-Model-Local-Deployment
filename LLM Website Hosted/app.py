@@ -4,7 +4,7 @@ import requests
 app = Flask(__name__)
 
 # API URL for the running model
-MODEL_API_URL = 'http://192.168.27.106:1234/v1/completions'
+MODEL_API_URL = 'http://193:1234/v1/completions' #your url link
 
 # Function to send the prompt to the model and get the response
 def get_model_response(prompt):
